@@ -10,7 +10,7 @@ class Department(Base):
 
     id: Mapped[int] = mapped_column(Integer, 
                                     primary_key=True,  
-                                    nullable=False)
+                                    autoincrement=True)
     name: Mapped[str] = mapped_column(String(200), 
                                       nullable=False)
     parent_id: Mapped[int | None] = mapped_column(Integer, 
@@ -28,5 +28,8 @@ class Department(Base):
                                                         cascade='all, delete-orphan')
     parent: Mapped['Department | None'] = relationship('Department', 
                                                         back_populates='children',
-                                                        cascade='all, delete-orphan')
+                                                        remote_side=[id])
     
+
+# ТЗ тут и в employee требует id как int. Однако возможно стоит делать как uuid.
+# UUID содержит больше информации, однако по нему нелья сделать сортировку и он требует больше памяти

@@ -25,5 +25,6 @@ class Employee(Base):
                                                  server_default=func.now(),
                                                  nullable=False)
 
-    departmen: Mapped['Department'] = relationship('Department', 
+    department: Mapped['Department'] = relationship('Department', 
                                                    back_populates="employees")
+    
