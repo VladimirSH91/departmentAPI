@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from db import Base
+from .department import Department
 
 class Employee(Base):
     __tablename__ = 'employee'
@@ -23,3 +24,6 @@ class Employee(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, 
                                                  server_default=func.now(),
                                                  nullable=False)
+
+    departmen: Mapped['Department'] = relationship('Department', 
+                                                   back_populates="employees")
