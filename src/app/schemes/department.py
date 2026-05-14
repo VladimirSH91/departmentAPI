@@ -18,7 +18,7 @@ class DepartmentBase(BaseModel):
 class DepatmentCreate(DepartmentBase):
     pass
 
-class DepatmentRead(BaseModel):
+class DepatmentRead(DepartmentBase):
     id: int
     created_at: datetime
     employees: List[EmployeeRead] = []

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from schemes import DepatmentCreate, DepatmentRead, EmployeeCreate
 from repositories.department import DepartmentRepository
 from repositories.employee import EmployeeRepository
+from service.department import DepartmentService
 from db.database import get_async_session
 
 department_router = APIRouter()
@@ -37,7 +38,6 @@ async def add_employee(data: EmployeeCreate,
         department_repo = DepartmentRepository(db_session=db_session)
         employee_repo = EmployeeRepository(db_session=db_session)
         employee_data = data.model_dump()
-        print(employee_data)
         data_department = await department_repo.get_by_id(employee_data['department_id'])
     
         if not data_department:
@@ -49,6 +49,20 @@ async def add_employee(data: EmployeeCreate,
 
 
 @department_router.get('/department/{id}', status_code=200)
-async def get_depatment_by_id(dept: int, include_employees:bool, 
+async def get_depatment_by_id(id: int,
+                              dept: int, 
+                              include_employees: bool, 
+                              sort_employees_by: str,
                               db_session: AsyncSession = Depends(get_async_session)):
-    pass
+    repository = DepartmentRepository(db_session=db_session)
+    employee_repo = EmployeeRepository(db_session=db_session)
+    department_servise = DepartmentService(repo=repository, employee_repo=employee_repo)
+    result = await department_servise.get_department_tree(department_id=id, 
+                                                   dept=dept,
+                                                   include_employees=include_employees,
+                                                   sort_employees_by=sort_employees_by)
+
+    if not result:
+        raise HTTPException(status_code=404, detail="Department not found")
+
+    return result
