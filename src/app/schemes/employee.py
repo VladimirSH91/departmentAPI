@@ -8,6 +8,9 @@ class EmployeBase(BaseModel):
     position: str
     hired_at: Optional[date] = None
 
+class EmployeeCreate(EmployeBase):
+    pass
+
 
 class EmployeeRead(EmployeBase):
     id: int
