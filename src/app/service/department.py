@@ -17,7 +17,6 @@ class DepartmentService:
             if not parent_exist:
                 raise HTTPException(status_code=404, detail='Parent department not found')
         
-        # Проверка уникальности name в пределах parent
         existing = await self.repo.get_by_name_and_parent(
             department_dict['name'], 
             department_dict.get('parent_id')
@@ -95,14 +94,12 @@ class DepartmentService:
                     raise HTTPException(status_code=404, 
                                         detail='Department not found')
                 
-                # Проверка на циклы в дереве
                 if await self._would_create_cycle(department_id, new_parent_id):
                     raise HTTPException(
                         status_code=409, 
                         detail='Cannot move department: would create a cycle in the tree'
                     )
         
-        # Проверка уникальности name в пределах parent при обновлении
         if 'name' in update_dict and update_dict['name'] is not None:
             new_parent_id = update_dict.get('parent_id', department.parent_id)
             existing = await self.repo.get_by_name_and_parent(
@@ -157,14 +154,11 @@ class DepartmentService:
             if reassign_to_department_id == department_id:
                 raise HTTPException(status_code=400, detail='Cannot reassign to the same department')
             
-            # Reassign employees to the target department
             await self.employee_repo.update_department_from_employee(department_id, reassign_to_department_id)
             
-            # Reassign child departments to the parent of the deleted department
             child_departments = await self.repo.get_children(department_id)
             for child in child_departments:
                 child.parent_id = department.parent_id
             await self.repo.db_session.flush()
         
-        # Delete the department (cascade will handle employees and children in cascade mode)
         await self.repo.delete(department)
