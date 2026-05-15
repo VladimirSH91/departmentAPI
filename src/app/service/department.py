@@ -17,6 +17,17 @@ class DepartmentService:
             if not parent_exist:
                 raise HTTPException(status_code=404, detail='Parent department not found')
         
+        # Проверка уникальности name в пределах parent
+        existing = await self.repo.get_by_name_and_parent(
+            department_dict['name'], 
+            department_dict.get('parent_id')
+        )
+        if existing:
+            raise HTTPException(
+                status_code=409, 
+                detail='Department with this name already exists in the same parent'
+            )
+        
         department = await self.repo.create(department_dict)
         return department
         
@@ -71,6 +82,7 @@ class DepartmentService:
         if not department:
             raise HTTPException(status_code=404, detail='Department not found')
         update_dict = update_data.model_dump()
+        
         if 'parent_id' in update_dict:
             new_parent_id = update_dict['parent_id']
 
@@ -82,9 +94,48 @@ class DepartmentService:
                 if not parent_exist:
                     raise HTTPException(status_code=404, 
                                         detail='Department not found')
+                
+                # Проверка на циклы в дереве
+                if await self._would_create_cycle(department_id, new_parent_id):
+                    raise HTTPException(
+                        status_code=409, 
+                        detail='Cannot move department: would create a cycle in the tree'
+                    )
+        
+        # Проверка уникальности name в пределах parent при обновлении
+        if 'name' in update_dict and update_dict['name'] is not None:
+            new_parent_id = update_dict.get('parent_id', department.parent_id)
+            existing = await self.repo.get_by_name_and_parent(
+                update_dict['name'], 
+                new_parent_id
+            )
+            if existing and existing.id != department_id:
+                raise HTTPException(
+                    status_code=409, 
+                    detail='Department with this name already exists in the same parent'
+                )
         
         updated_department = await self.repo.update(department, update_dict)
         return updated_department
+
+    async def _would_create_cycle(self, department_id: int, new_parent_id: int) -> bool:
+        """Проверяет, создаст ли перемещение департамента цикл в дереве"""
+        current = new_parent_id
+        visited = set()
+        
+        while current is not None:
+            if current == department_id:
+                return True
+            if current in visited:
+                return True
+            visited.add(current)
+            
+            parent = await self.repo.get_by_id(current)
+            if not parent:
+                break
+            current = parent.parent_id
+        
+        return False
 
 
     async def delete_department(self, 
@@ -117,4 +168,3 @@ class DepartmentService:
         
         # Delete the department (cascade will handle employees and children in cascade mode)
         await self.repo.delete(department)
-

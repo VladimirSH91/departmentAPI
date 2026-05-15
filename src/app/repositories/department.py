@@ -15,4 +15,12 @@ class DepartmentRepository(BaseRepository):
         
         return result.scalars()
 
-    
+    async def get_by_name_and_parent(self, name: str, parent_id: int | None):
+        result = await self.db_session.execute(
+            select(Department).where(
+                Department.name == name,
+                Department.parent_id == parent_id
+            )
+        )
+        return result.scalars().first()
+        

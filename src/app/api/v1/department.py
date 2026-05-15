@@ -47,7 +47,7 @@ async def add_employee(data: EmployeeCreate,
 
 @department_router.get('/department/{id}', status_code=200)
 async def get_depatment_by_id(id: int,
-                              dept: int, 
+                              depth: int, 
                               include_employees: bool, 
                               sort_employees_by: str,
                               db_session: AsyncSession = Depends(get_async_session)):
@@ -55,7 +55,7 @@ async def get_depatment_by_id(id: int,
     employee_repo = EmployeeRepository(db_session=db_session)
     department_servise = DepartmentService(repo=repository, employee_repo=employee_repo)
     result = await department_servise.get_department_tree(department_id=id, 
-                                                   dept=dept,
+                                                   dept=depth,
                                                    include_employees=include_employees,
                                                    sort_employees_by=sort_employees_by)
 
