@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, field_validator, Field
 from datetime import datetime
 from typing import Optional, List
 
@@ -13,10 +13,15 @@ class DepartmentBase(BaseModel):
         if not v or not v.strip():
             raise ValueError("name не может быть пустым")
         return v.strip()
-
+    
 
 class DepatmentCreate(DepartmentBase):
     pass
+
+class DepartmentUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1)
+    parent_id: Optional[int] = None
+
 
 class DepatmentRead(DepartmentBase):
     id: int
