@@ -35,3 +35,4 @@ class BaseRepository(ABC):
     async def delete(self, data) -> None:
         await self.db_session.delete(data)
         await self.db_session.flush()
+        

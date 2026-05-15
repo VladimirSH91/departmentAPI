@@ -78,6 +78,35 @@ class DepartmentService:
         updated_department = await self.repo.update(department, update_dict)
         return updated_department
 
-        
 
+    async def delete_department(self, 
+                                department_id: int,
+                                mode: str,
+                                reassign_to_department_id: int | None = None):
+        department = await self.repo.get_by_id(department_id)
+        if not department:
+            raise HTTPException(status_code=404, detail='Department not found')
+        
+        if mode == 'reassign':
+            if reassign_to_department_id is None:
+                raise HTTPException(status_code=400, detail='reassign_to_department_id is required when mode=reassign')
+            
+            target_department = await self.repo.get_by_id(reassign_to_department_id)
+            if not target_department:
+                raise HTTPException(status_code=404, detail='Target department not found')
+            
+            if reassign_to_department_id == department_id:
+                raise HTTPException(status_code=400, detail='Cannot reassign to the same department')
+            
+            # Reassign employees to the target department
+            await self.employee_repo.update_department_from_employee(department_id, reassign_to_department_id)
+            
+            # Reassign child departments to the parent of the deleted department
+            child_departments = await self.repo.get_children(department_id)
+            for child in child_departments:
+                child.parent_id = department.parent_id
+            await self.repo.db_session.flush()
+        
+        # Delete the department (cascade will handle employees and children in cascade mode)
+        await self.repo.delete(department)
 

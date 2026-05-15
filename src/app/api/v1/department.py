@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,7 +34,7 @@ async def get_all_department(db_session: AsyncSession = Depends(get_async_sessio
     return result
 
 
-@department_router.post('/departments/{id}/employees/')
+@department_router.post('/departments/{id}/employees/', status_code=200)
 async def add_employee(data: EmployeeCreate,
                        db_session: AsyncSession = Depends(get_async_session)):
     
@@ -64,7 +64,7 @@ async def get_depatment_by_id(id: int,
     return result
 
 
-@department_router.patch('/departments/{id}')
+@department_router.patch('/departments/{id}', status_code=200)
 async def department_update(department_id: int,
                             data: DepartmentUpdate,
                             db_session: AsyncSession = Depends(get_async_session)):
@@ -75,6 +75,15 @@ async def department_update(department_id: int,
     return result
 
 
-@department_router.delete('/departments/{id}')
-async def delele_department(db_session: AsyncSession = Depends(get_async_session)):
-    pass
+@department_router.delete('/departments/{id}', status_code=204)
+async def delele_department(department_id: int,
+                            mode: str = Query(..., pattern="^(cascade|reassign)$"),
+                            reassign_to_department_id: int | None = Query(None),
+                            db_session: AsyncSession = Depends(get_async_session)):
+    async with db_session.begin():
+        department_repo = DepartmentRepository(db_session=db_session)
+        employee_repo = EmployeeRepository(db_session=db_session)
+        service = DepartmentService(repo=department_repo, employee_repo=employee_repo)
+        await service.delete_department(department_id=department_id,
+                                        mode=mode,
+                                        reassign_to_department_id=reassign_to_department_id)
