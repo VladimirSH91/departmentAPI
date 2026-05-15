@@ -4,7 +4,7 @@ import uvicorn
 from api.v1.routes import router
 
 app = FastAPI(
-    title="Api для магазина",
+    title="API организационной структуры",
     version="1.0.0",
     root_path=""
     )

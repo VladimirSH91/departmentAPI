@@ -11,6 +11,6 @@ pip install -r requirements.txt установка зависимостей
 
 docker-compose up -d запуск контейнеров в фоне
 
-## Как задезть вовнутрь БД в докере (подзказка для себя)
+## Как задезть вовнутрь БД в докере (подсказка для себя)
 
 psql -h localhost -U postgres -d postgres
