@@ -5,10 +5,9 @@ from repositories.department import DepartmentRepository
 from schemes import EmployeeCreate
 
 class EmployeeService:
-    def __init__(self, db_session):
-        self.db_session = db_session
-        self.department_repo = DepartmentRepository(db_session)
-        self.employee_repo = EmployeeRepository(db_session)
+    def __init__(self, employee_repo: EmployeeRepository, department_repo: DepartmentRepository):
+        self.employee_repo = employee_repo
+        self.department_repo = department_repo
 
     async def add_employee(self, employee_data: EmployeeCreate) -> dict:
         """

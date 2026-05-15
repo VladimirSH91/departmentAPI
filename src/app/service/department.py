@@ -10,7 +10,15 @@ class DepartmentService:
         self.employee_repo = employee_repo
 
     async def create_department(self, data: DepatmentCreate):
-        pass
+        department_dict = data.model_dump()
+        
+        if 'parent_id' in department_dict and department_dict['parent_id'] is not None:
+            parent_exist = await self.repo.get_by_id(department_dict['parent_id'])
+            if not parent_exist:
+                raise HTTPException(status_code=404, detail='Parent department not found')
+        
+        department = await self.repo.create(department_dict)
+        return department
         
     async def get_department_tree(self, 
                                   department_id: int, 

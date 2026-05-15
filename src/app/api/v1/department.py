@@ -16,11 +16,11 @@ department_router = APIRouter()
 @department_router.post('/department/', status_code=200)
 async def add_depatment(data: DepatmentCreate, 
                         db_session: AsyncSession = Depends(get_async_session)):
-    # @todo тут и далее перенести в сервисный слой все обращения к БД
     async with db_session.begin():
         department_repo = DepartmentRepository(db_session=db_session)
-        department_dict = data.model_dump()
-        department = await department_repo.create(department_dict)
+        employee_repo = EmployeeRepository(db_session=db_session)
+        service = DepartmentService(repo=department_repo, employee_repo=employee_repo)
+        department = await service.create_department(data)
 
     return department
 
@@ -37,9 +37,10 @@ async def get_all_department(db_session: AsyncSession = Depends(get_async_sessio
 @department_router.post('/departments/{id}/employees/', status_code=200)
 async def add_employee(data: EmployeeCreate,
                        db_session: AsyncSession = Depends(get_async_session)):
-    
     async with db_session.begin():
-        service = EmployeeService(db_session)
+        employee_repo = EmployeeRepository(db_session=db_session)
+        department_repo = DepartmentRepository(db_session=db_session)
+        service = EmployeeService(employee_repo=employee_repo, department_repo=department_repo)
         result = await service.add_employee(data)
     return result
 
